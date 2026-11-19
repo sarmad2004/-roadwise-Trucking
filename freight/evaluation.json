@@ -1,0 +1,68 @@
+{
+  "chosen": "with_interactions",
+  "folds": [
+    {
+      "start": "2025-07-01",
+      "end_exclusive": "2025-09-01",
+      "train_n": 28806,
+      "test_n": 9671,
+      "baseline": {
+        "mae": 222.7312102524866,
+        "rmse": 662.874707071885,
+        "median_abs_error": 113.26987987235321
+      },
+      "main_effects": {
+        "mae": 196.96224369829625,
+        "rmse": 637.8628135511067,
+        "median_abs_error": 111.24554476027129
+      },
+      "with_interactions": {
+        "mae": 194.00169511962784,
+        "rmse": 636.2529156632155,
+        "median_abs_error": 109.66037193319744
+      }
+    },
+    {
+      "start": "2025-09-01",
+      "end_exclusive": "2025-11-01",
+      "train_n": 38477,
+      "test_n": 9523,
+      "baseline": {
+        "mae": 229.09657316845033,
+        "rmse": 670.6599545300177,
+        "median_abs_error": 115.7156754178261
+      },
+      "with_interactions": {
+        "mae": 106.2086526823449,
+        "rmse": 633.4090478407845,
+        "median_abs_error": 32.931283223716946
+      },
+      "chart_schema": {
+        "mae": 106.66221952540737,
+        "rmse": 633.4156286839054,
+        "median_abs_error": 33.73965085206669
+      }
+    }
+  ],
+  "training_rows": 48000,
+  "bad_weights": 292,
+  "missing_weights": 300,
+  "missing_market": 374,
+  "unseen_cities": [
+    "Allentown",
+    "Charlotte",
+    "Chicago",
+    "Jackson",
+    "Knoxville",
+    "Laredo",
+    "Norfolk",
+    "San Diego"
+  ],
+  "rate_per_mile_percentiles": {
+    "0.0": 0.33370919413341743,
+    "0.01": 1.6735214945063572,
+    "0.5": 2.1453480823707856,
+    "0.99": 3.1769396299902666,
+    "1.0": 14.125293930727675
+  }
+}

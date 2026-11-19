@@ -1,0 +1,24 @@
+Roadwise geographic context
+==========================
+
+The offline vector basemap contains generalized geographic reference data.
+Highways, urban areas, and county boundaries are concentrated around the
+Dallas–Oklahoma City demonstration. Route geometry and weather overlays come
+from the planning response. The optional online street layer uses OpenStreetMap
+raster tiles and displays its attribution on the map.
+
+Boundaries: U.S. Census Bureau cartographic boundaries as distributed by
+us-atlas 3.0.1. See ATLAS-LICENSE.txt.
+https://github.com/topojson/us-atlas
+
+Highways: U.S. Census Bureau TIGER/Line 2024 Primary Roads, generalized from
+the source geometry. U.S. Government public domain.
+https://www2.census.gov/geo/tiger/TIGER2024/PRIMARYROADS/
+
+Rivers, lakes, urban areas and populated places: Natural Earth 1:10m, public
+domain. Some city labels along the sample corridor were added separately.
+https://www.naturalearthdata.com/about/terms-of-use/
+
+Offline JavaScript: React and React DOM 18.3.1 (REACT-LICENSE.txt);
+Leaflet 1.9.4 (LEAFLET-LICENSE.txt). DM Sans is distributed under the SIL
+Open Font License (FONT-LICENSE.txt).

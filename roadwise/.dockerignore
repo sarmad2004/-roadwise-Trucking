@@ -1,0 +1,6 @@
+.git
+.openai
+__pycache__
+*.pyc
+dist
+walkthrough/*.mp4

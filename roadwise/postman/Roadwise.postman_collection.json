@@ -1,0 +1,372 @@
+{
+  "info": {
+    "name": "Roadwise · route planner",
+    "description": "Run against the Django application. Set baseUrl to your running backend (without a trailing slash). The first five requests can run offline. Run the sixth with outbound provider access.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Offline assessment",
+      "item": [
+        {
+          "name": "01 · Open example plan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/demo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "demo"
+              ]
+            },
+            "description": "Load the synthetic Dallas–Oklahoma City example and inspect the route geometry, checkpoint forecasts and fuel plan."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const plan = pm.response.json();",
+                  "pm.test('Plan returned', () => pm.response.to.have.status(200));",
+                  "pm.test('Each option has a path, checkpoints and fuel status', () => {",
+                  "  pm.expect(plan.routes.length).to.be.within(1, 3);",
+                  "  plan.routes.forEach(route => {",
+                  "    pm.expect(route.geometry.length).to.be.above(1);",
+                  "    pm.expect(route.checkpoints.length).to.be.above(1);",
+                  "    pm.expect(route.fuel).to.have.property('status');",
+                  "    route.checkpoints.forEach(point => pm.expect(point.forecast).to.have.lengthOf(49));",
+                  "  });",
+                  "});",
+                  "pm.test('Mileage, forecast levels and fuel arithmetic are consistent', () => {",
+                  "  plan.routes.forEach(r => {",
+                  "    pm.expect(r.checkpoints[0].mile).to.equal(0);",
+                  "    pm.expect(r.checkpoints[r.checkpoints.length - 1].mile).to.be.closeTo(r.miles, 0.001);",
+                  "    r.checkpoints.forEach(cp => cp.forecast.forEach(v => pm.expect(v).to.be.within(0, 4)));",
+                  "    if (r.fuel.status === 'ok') {",
+                  "      const sum = r.fuel.stops.reduce((total, stop) => total + stop.cost_usd, 0);",
+                  "      pm.expect(r.fuel.total_cost_usd).to.be.closeTo(sum, 0.005);",
+                  "    }",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "02 · Compare three demo routes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/plan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "plan"
+              ]
+            },
+            "description": "Replay the corridor with the selected departure, 32,000 lb and 25-mile spacing. This fixture uses a fixed UTC departure for reproducible results.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origin\": \"Dallas, TX\",\n  \"destination\": \"Oklahoma City, OK\",\n  \"departure\": \"2026-11-19T14:00:00Z\",\n  \"load_lb\": 32000,\n  \"spacing\": 25,\n  \"initial_gallons\": 12,\n  \"mode\": \"demo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const plan = pm.response.json();",
+                  "pm.test('Plan returned', () => pm.response.to.have.status(200));",
+                  "pm.test('Each option has a path, checkpoints and fuel status', () => {",
+                  "  pm.expect(plan.routes.length).to.be.within(1, 3);",
+                  "  plan.routes.forEach(route => {",
+                  "    pm.expect(route.geometry.length).to.be.above(1);",
+                  "    pm.expect(route.checkpoints.length).to.be.above(1);",
+                  "    pm.expect(route.fuel).to.have.property('status');",
+                  "    route.checkpoints.forEach(point => pm.expect(point.forecast).to.have.lengthOf(49));",
+                  "  });",
+                  "});",
+                  "pm.test('Mileage, forecast levels and fuel arithmetic are consistent', () => {",
+                  "  plan.routes.forEach(r => {",
+                  "    pm.expect(r.checkpoints[0].mile).to.equal(0);",
+                  "    pm.expect(r.checkpoints[r.checkpoints.length - 1].mile).to.be.closeTo(r.miles, 0.001);",
+                  "    r.checkpoints.forEach(cp => cp.forecast.forEach(v => pm.expect(v).to.be.within(0, 4)));",
+                  "    if (r.fuel.status === 'ok') {",
+                  "      const sum = r.fuel.stops.reduce((total, stop) => total + stop.cost_usd, 0);",
+                  "      pm.expect(r.fuel.total_cost_usd).to.be.closeTo(sum, 0.005);",
+                  "    }",
+                  "  });",
+                  "});",
+                  "pm.test('Three fixture alternatives', () => pm.expect(plan.routes).to.have.lengthOf(3));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "03 · Reject invalid spacing",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/plan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "plan"
+              ]
+            },
+            "description": "Check the validation boundary with an unsupported 13-mile spacing.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origin\": \"Dallas, TX\",\n  \"destination\": \"Oklahoma City, OK\",\n  \"departure\": \"2026-11-19T14:00:00Z\",\n  \"load_lb\": 32000,\n  \"spacing\": 13,\n  \"initial_gallons\": 12,\n  \"mode\": \"demo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Bad spacing rejected', () => pm.expect(pm.response.code).to.be.within(400, 499));"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "04 · Inspect the fuel-only plan",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/fuel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "fuel"
+              ]
+            },
+            "description": "Request the first route with tank purchases and route geometry; weather is unnecessary for this endpoint.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origin\": \"Dallas, TX\",\n  \"destination\": \"Oklahoma City, OK\",\n  \"departure\": \"2026-11-19T14:00:00Z\",\n  \"load_lb\": 32000,\n  \"spacing\": 25,\n  \"initial_gallons\": 12,\n  \"mode\": \"demo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const plan = pm.response.json();",
+                  "pm.test('Fuel response returned', () => pm.response.to.have.status(200));",
+                  "pm.test('One fuel route with total', () => { pm.expect(plan.routes).to.have.lengthOf(1); pm.expect(plan.routes[0].fuel).to.have.property('total_cost_usd'); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "05 · Compare a heavier load",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/plan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "plan"
+              ]
+            },
+            "description": "Recalculate at 41,000 lb using the same fixture departure.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origin\": \"Dallas, TX\",\n  \"destination\": \"Oklahoma City, OK\",\n  \"departure\": \"2026-11-19T14:00:00Z\",\n  \"load_lb\": 41000,\n  \"spacing\": 25,\n  \"initial_gallons\": 12,\n  \"mode\": \"demo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const plan = pm.response.json();",
+                  "pm.test('Plan returned', () => pm.response.to.have.status(200));",
+                  "pm.test('Each option has a path, checkpoints and fuel status', () => {",
+                  "  pm.expect(plan.routes.length).to.be.within(1, 3);",
+                  "  plan.routes.forEach(route => {",
+                  "    pm.expect(route.geometry.length).to.be.above(1);",
+                  "    pm.expect(route.checkpoints.length).to.be.above(1);",
+                  "    pm.expect(route.fuel).to.have.property('status');",
+                  "    route.checkpoints.forEach(point => pm.expect(point.forecast).to.have.lengthOf(49));",
+                  "  });",
+                  "});",
+                  "pm.test('Mileage, forecast levels and fuel arithmetic are consistent', () => {",
+                  "  plan.routes.forEach(r => {",
+                  "    pm.expect(r.checkpoints[0].mile).to.equal(0);",
+                  "    pm.expect(r.checkpoints[r.checkpoints.length - 1].mile).to.be.closeTo(r.miles, 0.001);",
+                  "    r.checkpoints.forEach(cp => cp.forecast.forEach(v => pm.expect(v).to.be.within(0, 4)));",
+                  "    if (r.fuel.status === 'ok') {",
+                  "      const sum = r.fuel.stops.reduce((total, stop) => total + stop.cost_usd, 0);",
+                  "      pm.expect(r.fuel.total_cost_usd).to.be.closeTo(sum, 0.005);",
+                  "    }",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Live services",
+      "item": [
+        {
+          "name": "06 · Request live road and weather data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/plan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "plan"
+              ]
+            },
+            "description": "Requires network access to the configured geocoder, road routing and forecast providers. Provider errors are intentionally visible. Change the endpoint text for another US trip.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origin\": \"Dallas, TX\",\n  \"destination\": \"Oklahoma City, OK\",\n  \"departure\": \"{{departure}}\",\n  \"load_lb\": 32000,\n  \"spacing\": 25,\n  \"initial_gallons\": 12,\n  \"mode\": \"live\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.variables.set('departure', new Date(Date.now() + 30 * 60 * 1000).toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const plan = pm.response.json();",
+                  "pm.test('Plan returned', () => pm.response.to.have.status(200));",
+                  "pm.test('Each option has a path, checkpoints and fuel status', () => {",
+                  "  pm.expect(plan.routes.length).to.be.within(1, 3);",
+                  "  plan.routes.forEach(route => {",
+                  "    pm.expect(route.geometry.length).to.be.above(1);",
+                  "    pm.expect(route.checkpoints.length).to.be.above(1);",
+                  "    pm.expect(route.fuel).to.have.property('status');",
+                  "    route.checkpoints.forEach(point => pm.expect(point.forecast).to.have.lengthOf(49));",
+                  "  });",
+                  "});",
+                  "pm.test('Mileage, forecast levels and fuel arithmetic are consistent', () => {",
+                  "  plan.routes.forEach(r => {",
+                  "    pm.expect(r.checkpoints[0].mile).to.equal(0);",
+                  "    pm.expect(r.checkpoints[r.checkpoints.length - 1].mile).to.be.closeTo(r.miles, 0.001);",
+                  "    r.checkpoints.forEach(cp => cp.forecast.forEach(v => pm.expect(v).to.be.within(0, 4)));",
+                  "    if (r.fuel.status === 'ok') {",
+                  "      const sum = r.fuel.stops.reduce((total, stop) => total + stop.cost_usd, 0);",
+                  "      pm.expect(r.fuel.total_cost_usd).to.be.closeTo(sum, 0.005);",
+                  "    }",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    }
+  ]
+}

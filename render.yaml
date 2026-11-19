@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: roadwise-truck-planner
+    runtime: docker
+    plan: free
+    dockerfilePath: ./roadwise/Dockerfile
+    dockerContext: ./roadwise
+    healthCheckPath: /api/health
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true

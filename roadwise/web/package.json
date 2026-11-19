@@ -1,0 +1,13 @@
+{
+  "name": "roadwise-web",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "esbuild src/app.jsx --bundle --jsx=transform --target=es2020 --outfile=assets/app.js",
+    "test": "node --test test.cjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12",
+    "jsdom": "26.1.0"
+  }
+}
